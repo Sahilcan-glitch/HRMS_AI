@@ -1,12 +1,18 @@
 import streamlit as st
 import requests
-import openai
+from openai import OpenAI
 import re
 
 # API URLs
 JOB_API_URL = "https://x8ki-letl-twmt.n7.xano.io/api:2Yytv5FJ/job_desc"
 CANDIDATE_API_URL = "https://x8ki-letl-twmt.n7.xano.io/api:2Yytv5FJ/candidate"
 INTERVIEW_API_URL = "https://x8ki-letl-twmt.n7.xano.io/api:2Yytv5FJ/job_interview"
+
+# Set OpenAI Client and API Key
+client = OpenAI(
+    # This is the default and can be omitted
+    api_key = st.secrets["openai"]["OPENAI_API_KEY"],
+    )
 
 # Fetch job data from the API
 def fetch_job_data():
@@ -82,12 +88,12 @@ def display_jobs_and_form(jobs):
 def analyze_responses(messages):
     responses = [{"role": "user", "content": msg["content"]} for msg in messages if msg["role"] == "user"]
     analysis_prompt = "Analyze the following interview responses and provide a summary. Also, give a score out of 100: in the format 'score out of 100:' or '|Score:' "
-    analysis_response = openai.ChatCompletion.create(
+    analysis_response = client.chat.completions.create(
         model=st.session_state["openai_model"],
         messages=[{"role": "system", "content": analysis_prompt}] + responses,
         max_tokens=500
     )
-    analysis_text = analysis_response.choices[0].message["content"].strip()
+    analysis_text = analysis_response.choices[0].message.content.strip()
     return analysis_text
 
 # Extract score using regular expression
@@ -107,18 +113,16 @@ def generate_interview_prompt(candidate_name, job_description):
 # Get next interview question using OpenAI
 def get_next_interview_question(messages, candidate_name, job_description):
     prompt = generate_interview_prompt(candidate_name, job_description)
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model=st.session_state["openai_model"],
         messages=[{"role": "system", "content": prompt}] + messages,
         max_tokens=150
     )
-    return response.choices[0].message["content"].strip()
+    return response.choices[0].message.content.strip()
 
 # Interview page
 def interview_page():
     st.title("Interview Chatbot")
-
-    openai.api_key = st.secrets["openai"]["OPENAI_API_KEY"]
 
     if "openai_model" not in st.session_state:
         st.session_state["openai_model"] = "gpt-3.5-turbo"
