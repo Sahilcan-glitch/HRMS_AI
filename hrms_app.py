@@ -30,10 +30,10 @@ def submit_candidate(name, email):
     try:
         response = requests.post(CANDIDATE_API_URL, json=payload)
         response.raise_for_status()
-        st.success("Application submitted successfully!")
+        st.success("Your profile has been successfully created!")
         return response.json().get("id")
     except requests.RequestException as e:
-        st.error(f"Failed to submit application: {e}")
+        st.error(f"Failed to save your profile: {e}")
         return None
 
 # Submit interview data to the API
@@ -63,11 +63,11 @@ def display_jobs_and_form(jobs):
     st.write("### Job Description")
     st.write(selected_job['role_description'])
     
-    st.subheader("Application Form")
+    st.subheader("Apply For This Job")
     name = st.text_input("Name")
     email = st.text_input("Email")
     
-    if st.button("Submit Application"):
+    if st.button("Continue to Virtual Interview"):
         if name and email:
             candidate_id = submit_candidate(name, email)
             if candidate_id:
@@ -122,7 +122,7 @@ def get_next_interview_question(messages, candidate_name, job_description):
 
 # Interview page
 def interview_page():
-    st.title("Interview Chatbot")
+    st.title("AI-Powered Virtual Interview")
 
     if "openai_model" not in st.session_state:
         st.session_state["openai_model"] = "gpt-3.5-turbo"
@@ -155,7 +155,7 @@ def interview_page():
                 st.markdown(next_question)
         else:
             st.session_state.current_question_index += 1  # Update index to prevent further questions
-            end_message = "Thank you for your time. We will get back to you soon."
+            end_message = "Thank you for your interest in the position and for taking the time to interview with us. We appreciate the opportunity to learn more about your qualifications and how they align with the needs of our organization. Your experience and skills are impressive, and we will be in touch soon to discuss next steps. Thank you for your time and consideration."
             st.session_state.messages.append({"role": "assistant", "content": end_message})
             with st.chat_message("assistant"):
                 st.markdown(end_message)
